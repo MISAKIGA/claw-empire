@@ -289,6 +289,7 @@ test.describe("CI API ops and docs coverage", () => {
   test("project path helpers + api provider CRUD + ops diagnostics are reachable in CI", async ({ request }) => {
     const seed = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
     const projectsRoot = path.resolve("..");
+    const repoName = path.basename(process.cwd());
     const candidateProjectPath = path.join(projectsRoot, "climpire-ci-path-check", seed);
 
     await establishApiSession(request);
@@ -319,11 +320,11 @@ test.describe("CI API ops and docs coverage", () => {
     expect(typeof pathCheck.can_create).toBe("boolean");
 
     const pathSuggestions = await expectOkJson<{ ok: boolean; paths: string[] }>(
-      await request.get("/api/projects/path-suggestions?q=climpire&limit=10"),
+      await request.get(`/api/projects/path-suggestions?q=${encodeURIComponent(repoName)}&limit=10`),
       "GET /api/projects/path-suggestions",
     );
     expect(pathSuggestions.ok).toBe(true);
-    expect(pathSuggestions.paths.some((entry) => entry.endsWith(path.sep + "climpire"))).toBe(true);
+    expect(pathSuggestions.paths.some((entry) => entry.endsWith(path.sep + repoName))).toBe(true);
 
     const pathBrowse = await expectOkJson<{
       ok: boolean;
@@ -335,7 +336,7 @@ test.describe("CI API ops and docs coverage", () => {
     );
     expect(pathBrowse.ok).toBe(true);
     expect(pathBrowse.current_path).toBe(projectsRoot);
-    expect(pathBrowse.entries.some((entry) => entry.name === "climpire")).toBe(true);
+    expect(pathBrowse.entries.some((entry) => entry.name === repoName)).toBe(true);
 
     const presets = await expectOkJson<{
       ok: boolean;
